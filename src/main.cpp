@@ -11,11 +11,18 @@ const char *password = "208walford";
 
 ESP8266WebServer server(80);
 
-void rootRoute()
+void flashLed(int duration = 500)
 {
   digitalWrite(ledPin, HIGH);
-  server.send(200, "text/plain", "Hello World!\r\n");
+  delay(duration);
   digitalWrite(ledPin, LOW);
+  delay(duration);
+}
+
+void rootRoute()
+{
+  server.send(200, "text/plain", "Hello World!\r\n");
+  flashLed();
 }
 
 void setup()
@@ -33,7 +40,7 @@ void setup()
   Serial.print("Wifi connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    flashLed();
     Serial.print(".");
   }
   Log("IP address:");
