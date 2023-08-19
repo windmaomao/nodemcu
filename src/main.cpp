@@ -18,25 +18,55 @@ const char *password = "208walford";
 Adafruit_SSD1306 display(128, 32, &Wire, -1);
 ESP8266WebServer server(80);
 
+const char html[] PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html><head>
+  <title>Sophia / Lucas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+  <h3>Hi Sophia and Lucas</h3>
+  <form action="/">
+    Type something: <input type="text" name="text">
+    <input type="submit" value="Submit">
+  </form><br>
+</body></html>)rawliteral";
+
 void flashLed(int duration = 500)
 {
-  digitalWrite(ledPin, HIGH);
-  delay(duration);
   digitalWrite(ledPin, LOW);
   delay(duration);
+  digitalWrite(ledPin, HIGH);
+  delay(duration);
+}
+
+void displayText(const char *text, int line = 1)
+{
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 12 * line);
+  display.println(text);
+  display.display();
 }
 
 void rootRoute()
 {
-  server.send(200, "text/plain", "Hello World!\r\n");
-  flashLed();
+  display.clearDisplay();
+
+  const char *message = "Hi Sopha and Lucas!";
+  displayText(message);
+  // server.send(200, "text/plain", message);
+
+  String text = server.arg("text");
+  displayText(text.c_str(), 1);
+
+  server.send(200, "text/html", html);
 }
 
 void setup()
 {
   // setup the pullup led
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+  flashLed();
 
   // setup serial
   Serial.begin(baudRate);
@@ -50,14 +80,7 @@ void setup()
     Serial.print(".");
   }
   Log("");
-  display.display();
-  flashLed();
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 10);
-  display.println("Initializing...");
-  display.display();
+  displayText("Initializing...");
 
   // setup wifi
   WiFi.begin(ssid, password);
@@ -67,12 +90,13 @@ void setup()
     flashLed();
     Serial.print(".");
   }
+  Log("");
   Log("IP address:");
   Log(WiFi.localIP());
+  displayText(WiFi.localIP().toString().c_str());
 
   // Setup server
   server.on("/", rootRoute);
-  Log("Route /");
   server.begin();
   Log("Http server started.");
 }
