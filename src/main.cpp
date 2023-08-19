@@ -1,6 +1,12 @@
 #include <Arduino.h>
+
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #define Log(...) Serial.println(__VA_ARGS__)
 
@@ -9,6 +15,7 @@ int baudRate = 115200;
 const char *ssid = "Gfiber208";
 const char *password = "208walford";
 
+Adafruit_SSD1306 display(128, 32, &Wire, -1);
 ESP8266WebServer server(80);
 
 void flashLed(int duration = 500)
@@ -34,6 +41,23 @@ void setup()
   // setup serial
   Serial.begin(baudRate);
   Log("Start logging...");
+
+  // setup oled
+  Serial.print("Oled allocating");
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  {
+    flashLed();
+    Serial.print(".");
+  }
+  Log("");
+  display.display();
+  flashLed();
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 10);
+  display.println("Initializing...");
+  display.display();
 
   // setup wifi
   WiFi.begin(ssid, password);
