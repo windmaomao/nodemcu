@@ -25,8 +25,8 @@ const char html[] PROGMEM = R"rawliteral(
   </head><body>
   <h3>Hi Sophia and Lucas</h3>
   <form action="/">
-    Type something: <input type="text" name="text">
-    <input type="submit" value="Submit">
+    Type something: <input type="text" name="text" autofocus />
+    <input type="submit" value="Submit" />
   </form><br>
 </body></html>)rawliteral";
 
@@ -56,8 +56,9 @@ void rootRoute()
   displayText(message);
   // server.send(200, "text/plain", message);
 
-  String text = server.arg("text");
-  displayText(text.c_str(), 1);
+  String arg = server.arg("text");
+  const char *text = arg.isEmpty() ? "..." : arg.c_str();
+  displayText(text, 1);
 
   server.send(200, "text/html", html);
 }
