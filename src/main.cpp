@@ -12,6 +12,7 @@
 #define Log(...) Serial.println(__VA_ARGS__)
 
 int ledPin = LED_BUILTIN;
+int buzzPin = D5;
 int baudRate = 115200;
 const char *ssid = "Gfiber208";
 const char *password = "208walford";
@@ -40,6 +41,11 @@ void flashLed(int duration = 500)
   delay(duration);
   digitalWrite(ledPin, HIGH);
   delay(duration);
+}
+
+void playTone(double freq)
+{
+  tone(buzzPin, freq, 500);
 }
 
 void displayText(const char *text, int line = 1)
@@ -75,7 +81,8 @@ void mqttCallback(char *topic, uint8_t *payload, unsigned int length)
     str += (char)payload[i];
   }
   Log(str);
-  displayText(str.c_str(), 1);
+  displayText(str.c_str());
+  playTone(payload[0] << 1);
 }
 
 void setup()
@@ -83,6 +90,11 @@ void setup()
   // setup the pullup led
   pinMode(ledPin, OUTPUT);
   flashLed();
+
+  // setup the buzzer
+  pinMode(buzzPin, OUTPUT);
+  noTone(buzzPin);
+  playTone(523);
 
   // setup serial
   Serial.begin(baudRate);
