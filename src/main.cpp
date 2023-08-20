@@ -2,6 +2,7 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <PubSubClient.h>
 
 #include <SPI.h>
 #include <Wire.h>
@@ -17,6 +18,9 @@ const char *password = "208walford";
 
 Adafruit_SSD1306 display(128, 32, &Wire, -1);
 ESP8266WebServer server(80);
+
+WiFiClient wlanclient;
+PubSubClient mqttClient(wlanclient);
 
 const char html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html><head>
@@ -63,6 +67,17 @@ void rootRoute()
   server.send(200, "text/html", html);
 }
 
+void mqttCallback(char *topic, uint8_t *payload, unsigned int length)
+{
+  String str = "";
+  for (unsigned int i = 0; i < length; i++)
+  {
+    str += (char)payload[i];
+  }
+  Log(str);
+  displayText(str.c_str(), 1);
+}
+
 void setup()
 {
   // setup the pullup led
@@ -96,13 +111,29 @@ void setup()
   Log(WiFi.localIP());
   displayText(WiFi.localIP().toString().c_str());
 
-  // Setup server
+  // Setup http server
   server.on("/", rootRoute);
   server.begin();
   Log("Http server started.");
+
+  // Setup mtqq broker
+  mqttClient.setServer("broker.emqx.io", 1883);
+  mqttClient.setCallback(mqttCallback);
+
+  if (mqttClient.connect("Test", NULL, NULL))
+  {
+    Log("MQTT connected.");
+    mqttClient.subscribe("test");
+  }
+  else
+  {
+    Log("MQTT failed.");
+    Log(mqttClient.state());
+  }
 }
 
 void loop()
 {
   server.handleClient();
+  mqttClient.loop();
 }
