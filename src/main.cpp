@@ -13,6 +13,7 @@
 
 int ledPin = LED_BUILTIN;
 int buzzPin = D5;
+int colorPin = 10;
 int baudRate = 115200;
 const char *ssid = "Gfiber208";
 const char *password = "208walford";
@@ -37,10 +38,9 @@ const char html[] PROGMEM = R"rawliteral(
 
 void flashLed(int duration = 500)
 {
-  digitalWrite(ledPin, LOW);
+  digitalWrite(colorPin, HIGH);
   delay(duration);
-  digitalWrite(ledPin, HIGH);
-  delay(duration);
+  digitalWrite(colorPin, LOW);
 }
 
 void playTone(double freq)
@@ -83,12 +83,17 @@ void mqttCallback(char *topic, uint8_t *payload, unsigned int length)
   Log(str);
   displayText(str.c_str());
   playTone(payload[0] << 1);
+  flashLed(5000);
 }
 
 void setup()
 {
   // setup the pullup led
   pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, HIGH);
+
+  // setup the color led
+  pinMode(colorPin, OUTPUT);
   flashLed();
 
   // setup the buzzer
