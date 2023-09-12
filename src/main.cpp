@@ -8,6 +8,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Servo.h>
 
 #define Log(...) Serial.println(__VA_ARGS__)
 
@@ -17,9 +18,12 @@ int colorPin = 10;
 int baudRate = 115200;
 const char *ssid = "Gfiber208";
 const char *password = "208walford";
+int servoPin = D3;
 
 Adafruit_SSD1306 display(128, 32, &Wire, -1);
 ESP8266WebServer server(80);
+
+Servo servo;
 
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
@@ -58,6 +62,14 @@ void displayText(const char *text, int line = 1)
   display.display();
 }
 
+void rotateServo()
+{
+  servo.write(0);
+  delay(500);
+  servo.write(180);
+  delay(500);
+}
+
 void rootRoute()
 {
   display.clearDisplay();
@@ -69,6 +81,7 @@ void rootRoute()
   String arg = server.arg("text");
   const char *text = arg.isEmpty() ? "..." : arg.c_str();
   displayText(text, 1);
+  rotateServo();
 
   server.send(200, "text/html", html);
 }
@@ -84,6 +97,7 @@ void mqttCallback(char *topic, uint8_t *payload, unsigned int length)
   displayText(str.c_str());
   playTone(payload[0] << 1);
   flashLed(5000);
+  rotateServo();
 }
 
 void setup()
@@ -100,6 +114,9 @@ void setup()
   pinMode(buzzPin, OUTPUT);
   noTone(buzzPin);
   playTone(523);
+
+  // setup servo
+  servo.attach(servoPin, 500, 2500);
 
   // setup serial
   Serial.begin(baudRate);
